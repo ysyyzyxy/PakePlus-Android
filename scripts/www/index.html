@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>开票税点自动计算器</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+  min-height:100vh;
+  padding:12px;
+  -webkit-font-smoothing:antialiased;
+}
+.container {
+  max-width:900px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+  overflow:hidden;
+}
+.header {
+  background:linear-gradient(90deg,#c41e3a,#e63946);
+  padding:20px 16px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.header h1 {
+  color:#fff;
+  margin:0;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.2);
+}
+.rate-bar {
+  padding:14px 16px;
+  background:#f8fafc;
+  border-bottom:1px solid #e2e8f0;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.rate-item {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.rate-item label {
+  color:#475569;
+  font-weight:600;
+  font-size:13px;
+}
+.rate-item input {
+  width:60px;
+  padding:6px 8px;
+  border:2px solid #e2e8f0;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  color:#1e293b;
+  text-align:center;
+  -webkit-appearance:none;
+}
+.rate-item input:focus {
+  border-color:#6366f1;
+  outline:none;
+}
+.rate-item span {
+  color:#64748b;
+  font-weight:600;
+  font-size:13px;
+}
+.rate-hint {
+  color:#94a3b8;
+  font-size:12px;
+}
+.main { padding:16px; }
+.grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+@media(min-width:768px){
+  .grid { grid-template-columns:1fr 100px 1fr; }
+}
+.card {
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+.card-seller {
+  background:linear-gradient(135deg,#e0e7ff,#c7d2fe);
+}
+.card-supplier {
+  background:linear-gradient(135deg,#dcfce7,#bbf7d0);
+}
+.card-title {
+  text-align:center;
+  padding-bottom:10px;
+  border-bottom:2px solid rgba(99,102,241,0.3);
+  margin-bottom:10px;
+}
+.card-supplier .card-title {
+  border-bottom-color:rgba(34,197,94,0.3);
+}
+.card-title span {
+  font-size:15px;
+  font-weight:700;
+}
+.card-seller .card-title span { color:#4338ca; }
+.card-supplier .card-title span { color:#15803d; }
+.row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 10px;
+  margin-bottom:6px;
+  border-radius:8px;
+  transition:all 0.2s;
+}
+.row-label {
+  font-size:13px;
+  font-weight:600;
+}
+.row-value {
+  text-align:right;
+  min-width:90px;
+  font-size:14px;
+  font-weight:600;
+}
+.row-value input {
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:right;
+  font-size:14px;
+  font-weight:600;
+  color:inherit;
+  outline:none;
+  -webkit-appearance:none;
+}
+.row-normal {
+  background:#fff;
+  border:1px solid #e2e8f0;
+}
+.row-normal .row-label { color:#64748b; }
+.row-normal .row-value { color:#334155; }
+.row-highlight {
+  background:linear-gradient(135deg,#fef08a,#fde047);
+  border:2px solid #eab308;
+}
+.row-highlight .row-label { color:#854d0e; }
+.row-highlight .row-value { color:#854d0e; }
+.row-bold {
+  background:#f1f5f9;
+  border:1px solid #cbd5e1;
+}
+.row-bold .row-label { color:#475569; }
+.row-bold .row-value { color:#0f172a; font-weight:700; }
+.remarks {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.remarks-title {
+  background:#f1f5f9;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
+}
+.remarks-title span {
+  color:#475569;
+  font-size:13px;
+  font-weight:600;
+}
+.remark-item {
+  background:#f8fafc;
+  border-radius:6px;
+  padding:10px 8px;
+  text-align:center;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.remark-item span {
+  color:#64748b;
+  font-size:11px;
+  font-weight:500;
+}
+.tip {
+  margin-top:14px;
+  padding:10px 14px;
+  background:linear-gradient(90deg,#fef3c7,#fde68a);
+  border-radius:10px;
+  text-align:center;
+  border-left:4px solid #f59e0b;
+}
+.tip span {
+  color:#92400e;
+  font-weight:700;
+  font-size:13px;
+}
+.summary {
+  margin-top:16px;
+  background:linear-gradient(135deg,#1e293b,#334155);
+  border-radius:12px;
+  padding:16px;
+  color:#fff;
+}
+.summary-title {
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:12px;
+  color:#94a3b8;
+}
+.summary-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.summary-item {
+  background:rgba(255,255,255,0.08);
+  border-radius:10px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.summary-label {
+  color:#94a3b8;
+  font-size:11px;
+  margin-bottom:4px;
+}
+.summary-val {
+  font-size:18px;
+  font-weight:700;
+  font-family:'Roboto Mono',monospace;
+}
+.c1 { color:#38bdf8; }
+.c2 { color:#f472b6; }
+.c3 { color:#a78bfa; }
+.c4 { color:#fbbf24; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>开票税点自动计算器</h1>
+  </div>
+  <div class="rate-bar">
+    <div class="rate-item">
+      <label>增值税税负率</label>
+      <input id="vatRate" type="number" value="13" step="0.01">
+      <span>%</span>
+    </div>
+    <div class="rate-item">
+      <label>销售税率</label>
+      <input id="salesRate" type="number" value="5" step="0.01">
+      <span>%</span>
+    </div>
+    <span class="rate-hint">(举例，不考虑其他费用)</span>
+  </div>
+  <div class="main">
+    <div class="grid">
+      <div class="card card-seller">
+        <div class="card-title"><span>销售方</span></div>
+        <div id="sellerRows"></div>
+      </div>
+      <div class="remarks">
+        <div class="remarks-title"><span>备注</span></div>
+        <div id="remarks"></div>
+      </div>
+      <div class="card card-supplier">
+        <div class="card-title"><span>供应商</span></div>
+        <div id="supplierRows"></div>
+      </div>
+    </div>
+    <div class="tip"><span>💡 只需输入黄色高亮部分，其他数据自动联动计算</span></div>
+    <div class="summary">
+      <div class="summary-title">汇总计算结果</div>
+      <div class="summary-grid" id="summaryRows"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = {
+  vatRate: 13, salesRate: 5,
+  seller: { invoiceAmount: 1587423, cost: 100000, costTaxFree: 121, inputTax: 4546, extraTaxPoint: 3, extraFee: 3000 }
+};
+const sellerLabels = [
+  {key:'invoiceAmount', label:'开票金额', editable:true, highlight:true},
+  {key:'taxFreeIncome', label:'不含税收入'},
+  {key:'outputTax', label:'增值税销项税额'},
+  {key:'payableVAT', label:'应交增值税'},
+  {key:'surcharge', label:'附加税'},
+  {key:'stampDuty', label:'印花税'},
+  {key:'incomeTax', label:'企业所得税'},
+  {key:'totalTax', label:'合计税额', bold:true}
+];
+const supplierLabels = [
+  {key:'cost', label:'开票金额', editable:true},
+  {key:'costTaxFree', label:'不含税金额', editable:true},
+  {key:'inputTax', label:'进项税额', editable:true},
+  {key:'extraTaxPoint', label:'另外税点', editable:true, highlight:true, suffix:'%'},
+  {key:'extraFee', label:'另外收费', editable:true}
+];
+const remarkMap = {
+  taxFreeIncome: '倒推→', outputTax: '', payableVAT: '',
+  surcharge: '增值税×50%×(7%+3%+2%)', stampDuty: '不含税收入×50%×万分之三',
+  incomeTax: '(收入-成本)×5%', totalTax: ''
+};
+function formatNum(n, d=4) {
+  if (n === undefined || n === null) return '';
+  return Number(n).toFixed(d).replace(/\.?0+$/, '');
+}
+function updateCalc() {
+  const vatRate = parseFloat(document.getElementById('vatRate').value) || 13;
+  const salesRate = parseFloat(document.getElementById('salesRate').value) || 5;
+  state.vatRate = vatRate; state.salesRate = salesRate;
+  const invoice = state.seller.invoiceAmount || 0;
+  const cost = state.seller.cost || 0;
+  const costTaxFree = state.seller.costTaxFree || 0;
+  const inputTax = state.seller.inputTax || 0;
+  const extraTaxPoint = state.seller.extraTaxPoint || 0;
+  const extraFee = state.seller.extraFee || 0;
+  const taxFreeIncome = invoice / (1 + vatRate/100);
+  const outputTax = invoice - taxFreeIncome;
+  const payableVAT = outputTax - inputTax;
+  const surcharge = payableVAT * 0.5 * 0.12;
+  const stampDuty = taxFreeIncome * 0.5 * 0.0003;
+  const incomeTax = (taxFreeIncome - costTaxFree) * (salesRate/100);
+  const totalTax = payableVAT + surcharge + stampDuty + incomeTax;
+  const extraTaxAmount = cost * (extraTaxPoint/100);
+  const totalWithExtra = totalTax + extraTaxAmount + extraFee;
+  const taxPoint1 = totalTax / invoice * 100;
+  const taxPoint2 = totalWithExtra / invoice * 100;
+  state.calculated = { taxFreeIncome, outputTax, payableVAT, surcharge, stampDuty, incomeTax, totalTax, totalWithExtra, taxPoint1, taxPoint2, extraTaxAmount };
+  renderSeller(taxFreeIncome, outputTax, payableVAT, surcharge, stampDuty, incomeTax, totalTax);
+  renderRemarks();
+  renderSupplier(cost, costTaxFree, inputTax, extraTaxPoint, extraFee);
+  renderSummary(totalTax, taxPoint1, totalWithExtra, taxPoint2);
+}
+function renderSeller(tfi, ot, pv, sr, sd, it, tt) {
+  const vals = {invoiceAmount:state.seller.invoiceAmount, taxFreeIncome:tfi, outputTax:ot, payableVAT:pv, surcharge:sr, stampDuty:sd, incomeTax:it, totalTax:tt};
+  document.getElementById('sellerRows').innerHTML = sellerLabels.map(item => {
+    const val = vals[item.key];
+    let cls = 'row-normal';
+    if (item.highlight) cls = 'row-highlight';
+    else if (item.bold) cls = 'row-bold';
+    const inputHtml = item.editable
+      ? `<input type="number" value="${val||''}" oninput="updateSeller('${item.key}',this.value)">`
+      : `<span>${formatNum(val)}</span>`;
+    return `<div class="row ${cls}"><span class="row-label">${item.label}</span><div class="row-value">${inputHtml}</div></div>`;
+  }).join('');
+}
+function renderRemarks() {
+  document.getElementById('remarks').innerHTML = sellerLabels.map(item => {
+    const text = remarkMap[item.key] || '';
+    return `<div class="remark-item"><span>${text}</span></div>`;
+  }).join('');
+}
+function renderSupplier(inv, tf, itax, etp, ef) {
+  const vals = {cost:inv, costTaxFree:tf, inputTax:itax, extraTaxPoint:etp, extraFee:ef};
+  document.getElementById('supplierRows').innerHTML = supplierLabels.map(item => {
+    const val = vals[item.key];
+    let cls = item.highlight ? 'row-highlight' : 'row-normal';
+    const suffix = item.suffix || '';
+    const inputHtml = item.editable
+      ? `<input type="number" value="${val||''}" oninput="updateSupplier('${item.key}',this.value)">${suffix?'<span style="margin-left:4px;font-size:12px;">'+suffix+'</span>':''}`
+      : `<span>${formatNum(val)}${suffix}</span>`;
+    return `<div class="row ${cls}"><span class="row-label">${item.label}</span><div class="row-value">${inputHtml}</div></div>`;
+  }).join('');
+}
+function renderSummary(tt, tp1, twe, tp2) {
+  const items = [
+    {label:'开票加收金额合计', val:formatNum(tt), c:'c1'},
+    {label:'开票加收税点合计', val:formatNum(tp1,2)+'%', c:'c2'},
+    {label:'加收金额(含额外)', val:formatNum(twe), c:'c3'},
+    {label:'加收税点(含额外)', val:formatNum(tp2,2)+'%', c:'c4'}
+  ];
+  document.getElementById('summaryRows').innerHTML = items.map(item =>
+    `<div class="summary-item"><div class="summary-label">${item.label}</div><div class="summary-val ${item.c}">${item.val}</div></div>`
+  ).join('');
+}
+function updateSeller(key, val) { state.seller[key] = parseFloat(val) || 0; updateCalc(); }
+function updateSupplier(key, val) { state.seller[key] = parseFloat(val) || 0; updateCalc(); }
+document.getElementById('vatRate').addEventListener('input', updateCalc);
+document.getElementById('salesRate').addEventListener('input', updateCalc);
+updateCalc();
+</script>
+</body>
+</html>
